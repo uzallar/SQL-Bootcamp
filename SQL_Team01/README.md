@@ -1,36 +1,106 @@
-# SQL Practice Tasks — Data Warehouse and Temporal Queries
+# Team 01 — SQL Practice
 
 ## Database Schema
 
-The tasks use the database model provided with the exercise.
+Используется схема базы данных из `rush01_model.sql`.
 
-> **Note:** These tasks assume that all schema changes and data modifications from previous exercises have already been applied.
+> Все задания выполняются на уже подготовленной базе данных.
 
 ---
 
-## Task 1
+# Exercise 00 — Classical DWH
 
-**File:** `team01_ex00.sql`
+**Файл:** `team01_ex00.sql`
 
-Write an SQL query that returns the total volume of transactions from user balances, aggregated by user and balance type.
+## Задание
 
-Requirements:
+Напишите SQL-запрос, который вычисляет общий объем транзакций (`SUM(money)`) для каждого пользователя и типа баланса.
 
-- aggregate all balance records, including inconsistent data;
-- return:
-  - `name`
-  - `lastname`
-  - `type`
-  - `volume`
-  - `currency_name`
-  - `last_rate_to_usd`
-  - `total_volume_in_usd`
-- replace missing values with:
-  - `name` → `not defined`
-  - `lastname` → `not defined`
-  - `currency_name` → `not defined`
-  - `last_rate_to_usd` → `1`
-- calculate `total_volume_in_usd` as:
+Необходимо обработать все данные, включая записи с отсутствующими связями между таблицами.
+
+Запрос должен вернуть следующие поля:
+
+- `name`
+- `lastname`
+- `type`
+- `volume`
+- `currency_name`
+- `last_rate_to_usd`
+- `total_volume_in_usd`
+
+### Правила
+
+- если `user.name` отсутствует — вывести `not defined`;
+- если `user.lastname` отсутствует — вывести `not defined`;
+- если название валюты отсутствует — вывести `not defined`;
+- если курс валюты отсутствует — использовать `1`;
+- использовать **последний** курс (`rate_to_usd`) для соответствующей валюты;
+- `total_volume_in_usd` вычисляется как
 
 ```sql
 volume * last_rate_to_usd
+```
+
+### Сортировка
+
+```text
+name DESC
+lastname ASC
+type ASC
+```
+
+---
+
+# Exercise 01 — Detailed Query
+
+**Файл:** `team01_ex01.sql`
+
+## Подготовка
+
+Перед выполнением запроса выполните:
+
+```sql
+INSERT INTO currency VALUES
+(100, 'EUR', 0.85, '2022-01-01 13:29');
+
+INSERT INTO currency VALUES
+(100, 'EUR', 0.79, '2022-01-08 13:29');
+```
+
+## Задание
+
+Напишите SQL-запрос, который выводит:
+
+- всех пользователей;
+- все записи из `balance`;
+- название валюты;
+- стоимость баланса в USD.
+
+### Правила
+
+Игнорировать валюты, отсутствующие в таблице `currency`.
+
+Вернуть поля:
+
+- `name`
+- `lastname`
+- `currency_name`
+- `currency_in_usd`
+
+Если имя или фамилия отсутствуют — вывести `not defined`.
+
+### Определение курса
+
+Для каждой записи `balance` необходимо:
+
+1. найти ближайший курс валюты **в прошлом** относительно `balance.updated`;
+2. если такого курса нет — взять ближайший курс **в будущем**;
+3. использовать найденный курс для вычисления значения в USD.
+
+### Сортировка
+
+```text
+name DESC
+lastname ASC
+currency_name ASC
+```
