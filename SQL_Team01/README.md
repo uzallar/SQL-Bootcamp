@@ -1,106 +1,87 @@
-# Team 01 — SQL Practice
+# SQL Practice Tasks — Data Warehouse and ETL
 
 ## Database Schema
 
-Используется схема базы данных из `rush01_model.sql`.
+The tasks use a database consisting of three independent data sources:
 
-> Все задания выполняются на уже подготовленной базе данных.
+* `user`
+* `balance`
+* `currency`
 
----
+Assume the schema has already been created and populated with sample data before starting the exercises.
 
-# Exercise 00 — Classical DWH
-
-**Файл:** `team01_ex00.sql`
-
-## Задание
-
-Напишите SQL-запрос, который вычисляет общий объем транзакций (`SUM(money)`) для каждого пользователя и типа баланса.
-
-Необходимо обработать все данные, включая записи с отсутствующими связями между таблицами.
-
-Запрос должен вернуть следующие поля:
-
-- `name`
-- `lastname`
-- `type`
-- `volume`
-- `currency_name`
-- `last_rate_to_usd`
-- `total_volume_in_usd`
-
-### Правила
-
-- если `user.name` отсутствует — вывести `not defined`;
-- если `user.lastname` отсутствует — вывести `not defined`;
-- если название валюты отсутствует — вывести `not defined`;
-- если курс валюты отсутствует — использовать `1`;
-- использовать **последний** курс (`rate_to_usd`) для соответствующей валюты;
-- `total_volume_in_usd` вычисляется как
-
-```sql
-volume * last_rate_to_usd
-```
-
-### Сортировка
-
-```text
-name DESC
-lastname ASC
-type ASC
-```
+> **Note:** The tables do not enforce foreign keys between each other. Missing references and `NULL` values should be handled correctly in all queries.
 
 ---
 
-# Exercise 01 — Detailed Query
+## Task 1
 
-**Файл:** `team01_ex01.sql`
+**File:** `team01_ex00.sql`
 
-## Подготовка
+Create a query that calculates the total balance volume for each user and balance type.
 
-Перед выполнением запроса выполните:
+Requirements:
+
+Return the following columns:
+
+| Column                | Description                                                                           |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| `name`                | User name. Replace `NULL` with `'not defined'`.                                       |
+| `lastname`            | User last name. Replace `NULL` with `'not defined'`.                                  |
+| `type`                | Balance type.                                                                         |
+| `volume`              | Sum of all balance transactions grouped by user and balance type.                     |
+| `currency_name`       | Currency name. Replace missing values with `'not defined'`.                           |
+| `last_rate_to_usd`    | Most recent exchange rate for the corresponding currency. If unavailable, return `1`. |
+| `total_volume_in_usd` | `volume * last_rate_to_usd`.                                                          |
+
+Additional requirements:
+
+* include all available balance records, even if the corresponding user or currency does not exist;
+* for each currency use the latest available exchange rate;
+* replace missing user names, last names, and currency names with `'not defined'`;
+* use `1` when no exchange rate exists.
+
+Sort the result by:
+
+1. `name` descending;
+2. `lastname` ascending;
+3. `type` ascending.
+
+---
+
+## Task 2
+
+**File:** `team01_ex01.sql`
+
+Before completing the task, insert the following records:
 
 ```sql
-INSERT INTO currency VALUES
-(100, 'EUR', 0.85, '2022-01-01 13:29');
+INSERT INTO currency
+VALUES (100, 'EUR', 0.85, '2022-01-01 13:29');
 
-INSERT INTO currency VALUES
-(100, 'EUR', 0.79, '2022-01-08 13:29');
+INSERT INTO currency
+VALUES (100, 'EUR', 0.79, '2022-01-08 13:29');
 ```
 
-## Задание
+Create a query that returns every balance transaction together with the corresponding currency value in USD.
 
-Напишите SQL-запрос, который выводит:
+Return the following columns:
 
-- всех пользователей;
-- все записи из `balance`;
-- название валюты;
-- стоимость баланса в USD.
+| Column            | Description                                                                    |
+| ----------------- | ------------------------------------------------------------------------------ |
+| `name`            | User name. Replace `NULL` with `'not defined'`.                                |
+| `lastname`        | User last name. Replace `NULL` with `'not defined'`.                           |
+| `currency_name`   | Currency name.                                                                 |
+| `currency_in_usd` | Transaction amount converted to USD using the nearest available exchange rate. |
 
-### Правила
+Exchange rate selection rules:
 
-Игнорировать валюты, отсутствующие в таблице `currency`.
+* first, use the most recent exchange rate whose timestamp is **earlier than or equal to** the transaction timestamp;
+* if no earlier rate exists, use the nearest exchange rate **after** the transaction timestamp;
+* ignore balance records whose currency does not exist in the `currency` table.
 
-Вернуть поля:
+Sort the result by:
 
-- `name`
-- `lastname`
-- `currency_name`
-- `currency_in_usd`
-
-Если имя или фамилия отсутствуют — вывести `not defined`.
-
-### Определение курса
-
-Для каждой записи `balance` необходимо:
-
-1. найти ближайший курс валюты **в прошлом** относительно `balance.updated`;
-2. если такого курса нет — взять ближайший курс **в будущем**;
-3. использовать найденный курс для вычисления значения в USD.
-
-### Сортировка
-
-```text
-name DESC
-lastname ASC
-currency_name ASC
-```
+1. `name` descending;
+2. `lastname` ascending;
+3. `currency_name` ascending.
