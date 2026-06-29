@@ -1,4 +1,3 @@
-````markdown
 # SQL Practice Tasks — Aggregate Queries and Analytical Operations
 
 ## Database Schema
@@ -297,4 +296,4 @@ Expected output:
 | Kazan | 44.71 | 30.33 | true |
 | Moscow | 20.24 | 18.50 | true |
 | ... | ... | ... | ... |
-````
+
