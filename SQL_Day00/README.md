@@ -36,7 +36,7 @@
 
 ## Task 1
 
-**File:** `task_01.sql`
+**File:** `day00_ex00.sql`
 
 Write a SELECT statement that returns the names and ages of all people from the city of Kazan.
 
@@ -44,7 +44,7 @@ Write a SELECT statement that returns the names and ages of all people from the 
 
 ## Task 2
 
-**File:** `task_02.sql`
+**File:** `day00_ex01.sql`
 
 Write a SELECT statement that returns the names and ages of women from the city of Kazan. Sort the result by name.
 
@@ -52,7 +52,7 @@ Write a SELECT statement that returns the names and ages of women from the city 
 
 ## Task 3
 
-**File:** `task_03.sql`
+**File:** `day00_ex02.sql`
 
 Write **two syntactically different** queries that return a list of pizzerias (name and rating) with a rating between 3.5 and 5 inclusive, ordered by rating.
 
@@ -63,7 +63,7 @@ Write **two syntactically different** queries that return a list of pizzerias (n
 
 ## Task 4
 
-**File:** `task_04.sql`
+**File:** `day00_ex03.sql`
 
 Write a SELECT statement that returns unique person identifiers who either visited pizzerias between January 6 and January 9, 2022 (inclusive), or visited the pizzeria with ID 2. Sort the result by person ID in descending order.
 
@@ -71,7 +71,7 @@ Write a SELECT statement that returns unique person identifiers who either visit
 
 ## Task 5
 
-**File:** `task_05.sql`
+**File:** `day00_ex04.sql`
 
 Write a SELECT statement that returns a single calculated field named `person_information`, formatted as follows:
 
@@ -85,7 +85,7 @@ Sort the result by this field in ascending order. Pay attention to the quotation
 
 ## Task 6
 
-**File:** `task_06.sql`
+**File:** `day00_ex05.sql`
 
 > **Forbidden:** `IN`, any type of `JOIN`
 
@@ -103,7 +103,7 @@ WHERE ...
 
 ## Task 7
 
-**File:** `task_07.sql`
+**File:** `day00_ex06.sql`
 
 > **Forbidden:** `IN`, any type of `JOIN`
 
@@ -118,7 +118,7 @@ else → return false
 
 ## Task 8
 
-**File:** `task_08.sql`
+**File:** `day00_ex07.sql`
 
 Write a query that returns each person's ID, name, and an age interval label (`interval_info`) based on the following logic:
 
@@ -134,7 +134,7 @@ Sort the result by `interval_info` in ascending order.
 
 ## Task 9
 
-**File:** `task_09.sql`
+**File:** `day00_ex08.sql`
 
 Write a query that returns all rows from the `person_order` table where the ID is an even number. Sort the result by ID.
 
@@ -142,7 +142,7 @@ Write a query that returns all rows from the `person_order` table where the ID i
 
 ## Task 10
 
-**File:** `task_10.sql`
+**File:** `day00_ex09.sql`
 
 > **Forbidden:** any type of `JOIN`
 
