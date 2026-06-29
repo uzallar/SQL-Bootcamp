@@ -1,329 +1,230 @@
-# Day 08 — SQL Bootcamp
-
-## _Isolation is one of ACID properties_
-
-Resume: Today you will see how database works with transactions and isolation levels.
-
-💡 [Tap here](https://new.oprosso.net/p/4cb31ec3f47a4596bc758ea1861fb624) **to leave your feedback on the project**. It's anonymous and will help our team make your educational experience better. We recommend completing the survey immediately after the project.
-
-## Contents
-
-1. [Chapter I](#chapter-i) \
-    1.1. [Preamble](#preamble)
-2. [Chapter II](#chapter-ii) \
-    2.1. [General Rules](#general-rules)
-3. [Chapter III](#chapter-iii) \
-    3.1. [Rules of the day](#rules-of-the-day)  
-4. [Chapter IV](#chapter-iv) \
-    4.1. [Exercise 00 — Simple transaction](#exercise-00-simple-transaction)  
-5. [Chapter V](#chapter-v) \
-    5.1. [Exercise 01 — Lost Update Anomaly](#exercise-01-lost-update-anomaly)  
-6. [Chapter VI](#chapter-vi) \
-    6.1. [Exercise 02 — Lost Update for Repeatable Read](#exercise-02-lost-update-for-repeatable-read)  
-7. [Chapter VII](#chapter-vii) \
-    7.1. [Exercise 03 — Non-Repeatable Reads Anomaly](#exercise-03-non-repeatable-reads-anomaly)  
-8. [Chapter VIII](#chapter-viii) \
-    8.1. [Exercise 04 — Non-Repeatable Reads for Serialization](#exercise-04-non-repeatable-reads-for-serialization)
-9. [Chapter IX](#chapter-ix) \
-    9.1. [Exercise 05 — Phantom Reads Anomaly](#exercise-05-phantom-reads-anomaly)
-10. [Chapter X](#chapter-x) \
-    10.1. [Exercise 06 — Phantom Reads for Repeatable Read](#exercise-06-phantom-reads-for-repeatable-read)
-11. [Chapter XI](#chapter-xi) \
-    11.1. [Exercise 07 — Deadlock](#exercise-07-deadlock)
-      
-
-## Chapter I
-## Preamble
-
-![D08_01](misc/images/D08_01.png)
-
-The Penrose stairs or Penrose steps, also called the impossible staircase, is an impossible object created by Lionel Penrose and his son Roger Penrose. A variation of the Penrose Triangle, it is a two-dimensional representation of a staircase in which the stairs make four 90-degree turns as they ascend or descend, yet form a continuous loop so that a person could climb them forever and never get higher. This is clearly impossible in three dimensions. The "continuous staircase" was first presented in an article written by the Penroses in 1959, based on the so-called "Penrose Triangle" published by Roger Penrose in the British Journal of Psychology in 1958. 
-
-"Penrose Stairs" is a mathematical anomaly, actually database theory has 4 foundametal data anomalies (physical anomalies).
-- Lost Update Anomaly;
-- Dirty Reads Anomaly;
-- Non-repeatable Reads Anomaly;
-- Phantom Read Anomaly.
-
-Therefore, there are different isolation levels in ANSI SQL standard that prevent known anomalies.
-
-![D08_02](misc/images/D08_02.png)
-
-From one point of view, this matrix should be a standard for any Relational Database, but reality... looks a bit different.
-
-|  |  | |
-| ------ | ------ | ------ |
-| PostgreSQL | ![D08_03](misc/images/D08_03.png) |
-| Oracle | ![D08_04](misc/images/D08_04.png) |
-| MySQL | ![D08_05](misc/images/D08_05.png) |
-
-Nowadays, IT community found a set of new anomalies based on Database Model (logical view):
-- Read Skew Anomaly;
-- Write Skew Anomaly;
-- Serialization Anomaly;
-- Fan Traps Anomaly;
-- Chasm Traps Anomaly;
-- Data Model Loops Anomaly;
-- etc.
-
-
-## Chapter II
-## General Rules
-
-- Use this page as your only reference. Do not listen to rumors and speculations about how to prepare your solution.
-- Make sure you are using the latest version of PostgreSQL.
-- It is perfectly fine if you use the IDE to write source code (aka SQL script).
-- To be evaluated, your solution must be in your GIT repository.
-- Your solutions will be evaluated by your peers.
-- You should not leave any files in your directory other than those explicitly specified by the exercise instructions. It is recommended that you modify your `.gitignore` to avoid accidents.
-- Got a question? Ask your neighbor to the right. Otherwise, try your neighbor on the left.
-- Your reference manual: mates / Internet / Google. 
-- Read the examples carefully. You may need things not specified in the topic.
-- And may the SQL-Force be with you!
-Absolutely anything can be represented in SQL! Let's get started and have fun!
-
-## Chapter III
-## Rules of the day
-
-- Please make sure you have your own database and access to it on your PostgreSQL cluster. 
-- Please download a [script](materials/model.sql) with Database Model here and apply the script to your database (you can use command line with psql or just run it through any IDE, for example DataGrip from JetBrains or pgAdmin from PostgreSQL community). **Our knowledge way is incremental and linear therefore please be aware all changes that you made in Day03 during Exercises 07-13 and in Day04 during Exercise 07 should be on place (its similar like in real world, when we applied a release and need to be consistency with data for new changes).**
-- All tasks contain a list of Allowed and Denied sections with listed database options, database types, SQL constructions etc. Please have a look at the section before you start.
-- Please take a look at the Logical View of our Database Model. 
-
-![schema](misc/images/schema.png)
-
-
-1. **pizzeria** table (Dictionary Table with available pizzerias)
-- field id — primary key
-- field name — name of pizzeria
-- field rating — average rating of pizzeria (from 0 to 5 points)
-2. **person** table (Dictionary Table with persons who loves pizza)
-- field id — primary key
-- field name — name of person
-- field age — age of person
-- field gender — gender of person
-- field address — address of person
-3. **menu** table (Dictionary Table with available menu and price for concrete pizza)
-- field id — primary key
-- field pizzeria_id — foreign key to pizzeria
-- field pizza_name — name of pizza in pizzeria
-- field price — price of concrete pizza
-4. **person_visits** table (Operational Table with information about visits of pizzeria)
-- field id — primary key
-- field person_id — foreign key to person
-- field pizzeria_id — foreign key to pizzeria
-- field visit_date — date (for example 2022-01-01) of person visit 
-5. **person_order** table (Operational Table with information about persons orders)
-- field id — primary key
-- field person_id — foreign key to person
-- field menu_id — foreign key to menu
-- field order_date — date (for example 2022-01-01) of person order 
+# SQL Practice Tasks — Transactions and Isolation Levels
 
-People's visit and people's order are different entities and don't contain any correlation between data. For example, a customer can be in a restaurant (just looking at the menu) and in that time place an order in another restaurant by phone or mobile application. Or another case, just be at home and again make a call with order without any visits.
+## Database Schema
 
+The tasks use the same database schema introduced in previous exercises.
 
-## Chapter IV
-## Exercise 00 — Simple transaction
+> **Note:** These exercises assume that all schema changes and data modifications from previous tasks have already been applied.
 
-| Exercise 00: Simple transaction |                                                                                                                          |
-|---------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| Turn-in directory                     | ex00                                                                                                                     |
-| Files to turn-in                      | `day08_ex00.sql` with comments for Session #1, Session #2 statements; screenshot of psql output for Session #1; screenshot of psql output for Session #2 |
-| **Allowed**                               |                                                                                                                          |
-| Language                        |  SQL|
+---
 
-Please use the command line for PostgreSQL database (psql) for this task. You need to check how your changes will be published to the database for other database users. 
+## Task 1
 
-Actually, we need two active sessions (i.e. 2 parallel sessions in the command line). 
+**File:** `day08_ex00.sql`
 
-Please provide a proof that your parallel session can’t see your changes until you will make a `COMMIT`;
+Use two parallel `psql` sessions to demonstrate transaction visibility.
 
-See the steps below.
+Submit:
 
-**Session #1**
-- Update of rating for "Pizza Hut" to 5 points in a transaction mode.
-- Check that you can see a changes in session #1.
+* `day08_ex00.sql` containing SQL statements for both sessions with comments;
+* a screenshot of Session 1;
+* a screenshot of Session 2.
 
-**Session #2**
-- Check that you can’t see a changes in session #2.
+Requirements:
 
-**Session #1**
-- Publish your changes for all parallel sessions.
+**Session 1**
 
-**Session #2**
-- Check that you can see a changes in session #2.
+* start a transaction;
+* update the rating of **Pizza Hut** to `5`;
+* verify that the updated value is visible inside the current transaction.
 
+**Session 2**
 
-So, take a look on example of our output for Session #2.
+* query the same record before Session 1 commits;
+* verify that the old value is still visible.
 
-    pizza_db=> select * from pizzeria where name  = 'Pizza Hut';
-    id |   name    | rating
-    ----+-----------+--------
-    1 | Pizza Hut |    4.6
-    (1 row)
+**Session 1**
 
-    pizza_db=> select * from pizzeria where name  = 'Pizza Hut';
-    id |   name    | rating
-    ----+-----------+--------
-    1 | Pizza Hut |      5
-    (1 row)
+* commit the transaction.
 
-You can see that the same query returns different results because the first query was run before publishing in Session#1 and the second query was run after Session#1 was finished.
+**Session 2**
 
-## Chapter V
-## Exercise 01 — Lost Update Anomaly
+* execute the same query again;
+* verify that the committed value is now visible.
 
-| Exercise 01: Lost Update Anomaly|                                                                                                                          |
-|---------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| Turn-in directory                     | ex01                                                                                                                     |
-| Files to turn-in                      | `day08_ex01.sql` with comments for Session #1, Session #2 statements; screenshot of psql output for Session #1; screenshot of psql output for Session #2                                                                                 |
-| **Allowed**                               |                                                                                                                          |
-| Language                        |  SQL                                                                                              |
+---
 
-Please use the command line for PostgreSQL database (psql) for this task. You need to check how your changes will be published to the database for other database users. 
+## Task 2
 
-Actually, we need two active sessions (i.e. 2 parallel sessions in the command line). 
+**File:** `day08_ex01.sql`
 
-Before running a task, make sure you are at a standard isolation level in your database. Just run the following statement `SHOW TRANSACTION ISOLATION LEVEL;` and the result should be "read committed".
+Demonstrate the **Lost Update** anomaly using the default `READ COMMITTED` isolation level.
 
-If not, please set the read committed isolation level explicitly on a session level.
+Submit:
 
-|  |  |
-| ------ | ------ |
-| Let's examine one of the famous "Lost Update Anomaly" database patterns. You can see a graphical representation of this anomaly on a picture. The horizontal red line represents the final results after all the sequential steps for both Sessions. | ![D08_06](misc/images/D08_06.png) |
+* `day08_ex01.sql` with statements for both sessions;
+* screenshots of both sessions.
 
-Please check a rating for "Pizza Hut" in a transaction mode for both sessions and then make an `UPDATE` of the rating to a value of 4 in Session #1 and make an `UPDATE` of the rating to a value of 3.6 in Session #2 (in the same order as in the picture).
+Requirements:
 
+* verify that the transaction isolation level is `READ COMMITTED`;
+* if necessary, explicitly set the isolation level;
+* use two concurrent sessions;
+* both sessions should read the rating of **Pizza Hut**;
+* update the rating to `4` in Session 1;
+* update the rating to `3.6` in Session 2;
+* observe the final result after both transactions complete.
 
+---
 
-## Chapter VI
-## Exercise 02 — Lost Update for Repeatable Read
+## Task 3
 
-| Exercise 02: Lost Update for Repeatable Read|                                                                                                                          |
-|---------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| Turn-in directory                     | ex02                                                                                                                     |
-| Files to turn-in                      | `day08_ex02.sql` with comments for Session #1, Session #2 statements; screenshot of psql output for Session #1; screenshot of psql output for Session #2                                                                                  |
-| **Allowed**                               |                                                                                                                          |
-| Language                        |  SQL                                                                                              |
+**File:** `day08_ex02.sql`
 
-Please use the command line for PostgreSQL database (psql) for this task. You need to check how your changes will be published to the database for other database users. 
+Repeat the previous experiment using the `REPEATABLE READ` isolation level.
 
-Actually, we need two active sessions (i.e. 2 parallel sessions in the command line).
+Submit:
 
-|  |  |
-| ------ | ------ |
-| Let's examine one of the famous "Lost Update Anomaly" database patterns, but under the `REPEATABLE READ` isolation level. You can see a graphical representation of this anomaly on a picture. Horizontal red line means the final results after all sequential steps for both Sessions. | ![D08_07](misc/images/D08_07.png) |
+* `day08_ex02.sql` with statements for both sessions;
+* screenshots of both sessions.
 
-Please check a rating for "Pizza Hut" in a transaction mode for both sessions and then make an `UPDATE` of the rating to a value of 4 in Session #1 and make an `UPDATE` of the rating to a value of 3.6 in Session #2 (in the same order as in the picture).
+Requirements:
 
-## Chapter VII
-## Exercise 03 — Non-Repeatable Reads Anomaly
+* configure both sessions to use `REPEATABLE READ`;
+* read the current rating of **Pizza Hut**;
+* update the rating to `4` in Session 1;
+* update the rating to `3.6` in Session 2;
+* analyze the transaction behavior under this isolation level.
 
-| Exercise 03: Non-Repeatable Reads Anomaly |                                                                                                                          |
-|---------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| Turn-in directory                     | ex03                                                                                                                     |
-| Files to turn-in                      | `day08_ex03.sql` with comments for Session #1, Session #2 statements; screenshot of psql output for Session #1; screenshot of psql output for Session #2                                                                                 |
-| **Allowed**                               |                                                                                                                          |
-| Language                        |  SQL                                                                                              |
+---
 
-Please use the command line for PostgreSQL database (psql) for this task. You need to check how your changes will be published to the database for other database users. 
+## Task 4
 
-Actually, we need two active sessions (i.e. 2 parallel sessions in the command line).
+**File:** `day08_ex03.sql`
 
-|  |  |
-| ------ | ------ |
-| Let's check one of the famous "Non-Repeatable Reads" database patterns, but under the `READ COMMITTED` isolation level. You can see a graphical representation of this anomaly on a picture. The horizontal red line represents the final result after all sequential steps for both Sessions. | ![D08_08](misc/images/D08_08.png) |
+Demonstrate the **Non-Repeatable Read** anomaly under the `READ COMMITTED` isolation level.
 
-Please check a rating for "Pizza Hut" in a transaction mode for Session #1 and then make an `UPDATE` of the rating to a value of 3.6 in Session #2 (in the same order as in the picture).
+Submit:
 
+* `day08_ex03.sql` with statements for both sessions;
+* screenshots of both sessions.
 
-## Chapter VIII
-## Exercise 04 — Non-Repeatable Reads for Serialization
+Requirements:
 
+**Session 1**
 
-| Exercise 04: Non-Repeatable Reads for Serialization |                                                                                                                          |
-|---------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| Turn-in directory                     | ex04                                                                                                                     |
-| Files to turn-in                      | `day08_ex04.sql` with comments for Session #1, Session #2 statements; screenshot of psql output for Session #1; screenshot of psql output for Session #2                                                                                 |
-| **Allowed**                               |                                                                                                                          |
-| Language                        |  SQL                                                                                              |
+* start a transaction;
+* read the rating of **Pizza Hut**.
 
-Please use the command line for PostgreSQL database (psql) for this task. You need to check how your changes will be published to the database for other database users. 
+**Session 2**
 
-Actually, we need two active sessions (i.e. 2 parallel sessions in the command line).
+* update the rating to `3.6`;
+* commit the transaction.
 
-|  |  |
-| ------ | ------ |
-| Let's check one of the famous "Non-Repeatable Reads" database patterns, but under the `SERIALIZABLE` isolation level. You can see a graphical representation of this anomaly on a picture. The horizontal red line represents the final results after all sequential steps for both Sessions. | ![D08_09](misc/images/D08_09.png) |
+**Session 1**
 
-Please check a rating for "Pizza Hut" in a transaction mode for Session #1, and then make an `UPDATE` of the rating to a value of 3.0 in Session #2 (in the same order as in the picture).
+* execute the same query again within the same transaction;
+* compare the results.
 
+---
 
+## Task 5
 
-## Chapter IX
-## Exercise 05 — Phantom Reads Anomaly
+**File:** `day08_ex04.sql`
 
+Repeat the previous experiment using the `SERIALIZABLE` isolation level.
 
-| Exercise 05: Phantom Reads Anomaly|                                                                                                                          |
-|---------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| Turn-in directory                     | ex05                                                                                                                     |
-| Files to turn-in                      | `day08_ex05.sql`  with comments for Session #1, Session #2 statements; screenshot of psql output for Session #1; screenshot of psql output for Session #2                                                                                 |
-| **Allowed**                               |                                                                                                                          |
-| Language                        |   SQL                                                                                              |
+Submit:
 
-Please use the command line for PostgreSQL database (psql) for this task. You need to check how your changes will be published to the database for other database users. 
+* `day08_ex04.sql` with statements for both sessions;
+* screenshots of both sessions.
 
-Actually, we need two active sessions (i.e. 2 parallel sessions in the command line).
+Requirements:
 
-|  |  |
-| ------ | ------ |
-| Let's check one of the famous "phantom reads" database patterns, but under the `READ COMMITTED` isolation level. You can see a graphical representation of this anomaly on a picture. The horizontal red line represents the final results after all sequential steps for both Sessions. | ![D08_10](misc/images/D08_10.png) |
+* configure Session 1 to use `SERIALIZABLE`;
+* read the rating of **Pizza Hut**;
+* update the rating to `3.0` in Session 2;
+* execute the same query again in Session 1;
+* analyze the observed behavior.
 
-Please summarize all ratings for all pizzerias in one transaction mode for Session #1 and then make `INSERT` of the new restaurant 'Kazan Pizza' with rating 5 and ID=10 in Session #2 (in the same order as in the picture).
- 
+---
 
-## Chapter X
-## Exercise 06 — Phantom Reads for Repeatable Read
+## Task 6
 
+**File:** `day08_ex05.sql`
 
-| Exercise 06: Phantom Reads for Repeatable Read|                                                                                                                          |
-|---------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| Turn-in directory                     | ex06                                                                                                                     |
-| Files to turn-in                      | `day08_ex06.sql`  with comments for Session #1, Session #2 statements; screenshot of psql output for Session #1; screenshot of psql output for Session #2                                                                                 |
-| **Allowed**                               |                                                                                                                          |
-| Language                        |  SQL                                                                                              |
+Demonstrate the **Phantom Read** anomaly under the `READ COMMITTED` isolation level.
 
-Please use the command line for PostgreSQL database (psql) for this task. You need to check how your changes will be published to the database for other database users. 
+Submit:
 
-Actually, we need two active sessions (i.e. 2 parallel sessions in the command line).
+* `day08_ex05.sql` with statements for both sessions;
+* screenshots of both sessions.
 
-|  |  |
-| ------ | ------ |
-| Let's check one of the famous "Phantom Reads" database patterns, but under the isolation level `REPEATABLE READ`. You can see a graphical representation of this anomaly on a picture. The horizontal red line represents the final results after all sequential steps for both Sessions. | ![D08_11](misc/images/D08_11.png) |
+Requirements:
 
-Please summarize all ratings for all pizzerias in one transaction mode for Session #1 and then make `INSERT` of the new restaurant 'Kazan Pizza 2' with rating 4 and ID=11 in Session #2 (in the same order as in the picture).
+**Session 1**
 
-## Chapter XI
-## Exercise 07 — Deadlock
+* start a transaction;
+* calculate the total sum of all restaurant ratings.
 
+**Session 2**
 
-| Exercise 07: Deadlock|                                                                                                                          |
-|---------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| Turn-in directory                     | ex07                                                                                                                     |
-| Files to turn-in                      | `day08_ex07.sql`    with comments for Session #1, Session #2 statements; screenshot of psql output for Session #1; screenshot of psql output for Session #2                                                                                |
-| **Allowed**                               |                                                                                                                          |
-| Language                        |  SQL                                                                                              |
+* insert a new restaurant:
 
-Please use the command line for PostgreSQL database (psql) for this task. You need to check how your changes will be published to the database for other database users. 
+```sql
+INSERT INTO pizzeria (id, name, rating)
+VALUES (10, 'Kazan Pizza', 5);
+```
 
-Actually, we need two active sessions (i.e. 2 parallel sessions in the command line).
+* commit the transaction.
 
-Let’s reproduce a deadlock situation in our database. 
+**Session 1**
 
+* execute the aggregate query again;
+* compare the results.
 
-|  |  |
-| ------ | ------ |
-| You can see a graphical representation of the deadlock situation in a picture. It looks like a "Christ-lock" between parallel sessions. | ![D08_12](misc/images/D08_12.png) |
+---
 
-Please write any SQL statement with any isolation level (you can use the default setting) on the table `pizzeria` to reproduce this deadlock situation.
+## Task 7
 
+**File:** `day08_ex06.sql`
+
+Repeat the phantom read experiment using the `REPEATABLE READ` isolation level.
+
+Submit:
+
+* `day08_ex06.sql` with statements for both sessions;
+* screenshots of both sessions.
+
+Requirements:
+
+**Session 1**
+
+* start a transaction using `REPEATABLE READ`;
+* calculate the total sum of restaurant ratings.
+
+**Session 2**
+
+* insert a new restaurant:
+
+```sql
+INSERT INTO pizzeria (id, name, rating)
+VALUES (11, 'Kazan Pizza 2', 4);
+```
+
+* commit the transaction.
+
+**Session 1**
+
+* execute the aggregate query again;
+* compare the results.
+
+---
+
+## Task 8
+
+**File:** `day08_ex07.sql`
+
+Reproduce a deadlock using two concurrent database sessions.
+
+Submit:
+
+* `day08_ex07.sql` containing statements for both sessions;
+* screenshots demonstrating the deadlock.
+
+Requirements:
+
+* use the `pizzeria` table;
+* create a deadlock using any valid SQL statements;
+* the default transaction isolation level may be used;
+* ensure that both sessions block each other until the database detects the deadlock.
